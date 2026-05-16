@@ -14,7 +14,7 @@ CityExplorer es una aplicación web diseñada para ayudar a los turistas a plani
 - **Frontend**: Envoltorio del notebook en Flask (las funciones del ipynb se copiaron a app.py) y se expusieron como endpoints REST que devuelven JSON. Un archivo HTML con js consume esos endpoints para ofrecer una interfaz interactiva donde el usuario selecciona hotel, elige lugares y recibe la ruta optimizada sin tocar la terminal.
 
 ## Cómo Ejecutar la Aplicación
-1. Clona el repositorio en tu máquina local.
+1. Clona el repo
 2. pip install flask
 3. pip install collections
 4. Ejecuta la aplicación: python3 app.py
