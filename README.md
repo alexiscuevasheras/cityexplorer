@@ -15,5 +15,7 @@ CityExplorer es una aplicación web diseñada para ayudar a los turistas a plani
 
 ## Cómo Ejecutar la Aplicación
 1. Clona el repositorio en tu máquina local.
-2. Ejecuta la aplicación: python3 app.py
+2. pip install flask
+3. pip install collections
+4. Ejecuta la aplicación: python3 app.py
 5. Abre tu navegador y visita `http://localhost:8080` para acceder a CityExplorer
