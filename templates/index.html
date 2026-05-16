@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificador de Rutas - CDMX</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #e94560, #f5a623);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #8892b0;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .card h2 {
+            color: #e94560;
+            margin-bottom: 16px;
+            font-size: 1.3em;
+        }
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #e94560;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccd6f6;
+            font-weight: 500;
+        }
+        select, input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #e0e0e0;
+            font-size: 1em;
+            margin-bottom: 12px;
+            transition: border-color 0.3s;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+        select option { background: #1a1a2e; color: #e0e0e0; }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3); }
+        button:active { transform: translateY(0); }
+        .btn-primary {
+            background: linear-gradient(135deg, #e94560, #f5a623);
+            color: white;
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccd6f6;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .lugares-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .lugar-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .lugar-item:hover { border-color: #e94560; background: rgba(233, 69, 96, 0.1); }
+        .lugar-item.selected { border-color: #f5a623; background: rgba(245, 166, 35, 0.15); }
+        .lugar-item .nombre { font-weight: 600; font-size: 1.05em; margin-bottom: 4px; }
+        .lugar-item .info { font-size: 0.85em; color: #8892b0; }
+        .lugar-item .rating { color: #f5a623; }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .tag-historico { background: rgba(233, 69, 96, 0.2); color: #e94560; }
+        .tag-cultural { background: rgba(100, 181, 246, 0.2); color: #64b5f6; }
+        .tag-parque { background: rgba(102, 187, 106, 0.2); color: #66bb6a; }
+        .tag-gastronomia { background: rgba(245, 166, 35, 0.2); color: #f5a623; }
+        .resultado-ruta {
+            margin-top: 16px;
+        }
+        .ruta-step {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .ruta-step:last-child { border-bottom: none; }
+        .ruta-arrow {
+            color: #e94560;
+            font-size: 1.2em;
+            margin: 0 12px;
+        }
+        .ruta-tiempo {
+            margin-left: auto;
+            background: rgba(233, 69, 96, 0.2);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            color: #e94560;
+            font-weight: 600;
+        }
+        .ruta-intermedia {
+            font-size: 0.8em;
+            color: #8892b0;
+            margin-left: 40px;
+            padding: 4px 0;
+        }
+        .alerta {
+            background: rgba(245, 166, 35, 0.15);
+            border: 1px solid rgba(245, 166, 35, 0.4);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        .alerta h3 { color: #f5a623; margin-bottom: 8px; }
+        .alerta-roja {
+            background: rgba(233, 69, 96, 0.15);
+            border-color: rgba(233, 69, 96, 0.4);
+        }
+        .alerta-roja h3 { color: #e94560; }
+        .hidden { display: none; }
+        .orden-lista {
+            counter-reset: orden;
+            list-style: none;
+            padding: 0;
+        }
+        .orden-lista li {
+            counter-increment: orden;
+            padding: 10px 0 10px 40px;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .orden-lista li::before {
+            content: counter(orden);
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #e94560, #f5a623);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+        .resumen-box {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 16px 0;
+        }
+        .resumen-item {
+            flex: 1;
+            min-width: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+        .resumen-item .valor {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #f5a623;
+        }
+        .resumen-item .etiqueta {
+            font-size: 0.85em;
+            color: #8892b0;
+            margin-top: 4px;
+        }
+        .autocomplete-wrapper { position: relative; }
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        .autocomplete-list div {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .autocomplete-list div:hover { background: rgba(233, 69, 96, 0.2); }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #8892b0;
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e94560;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Planificador de Rutas CDMX</h1>
+        <p class="subtitle">Optimiza tu recorrido turístico usando estructuras de datos avanzadas</p>
+        <p class="subtitle">Proyecto Final Análisis de Algoritmos y Complejidad. Equipo 7: Nadia Medina y Alexis Cuevas</p>
+
+        <!-- Paso 1: Seleccion de hotel -->
+        <div class="card" id="step1">
+            <h2><span class="step-number">1</span> Selecciona tu hotel</h2>
+            <div class="autocomplete-wrapper">
+                <label for="hotel-search">Busca tu hotel (autocompletado con Trie):</label>
+                <input type="text" id="hotel-search" placeholder="Escribe el nombre de tu hotel..." autocomplete="off">
+                <div class="autocomplete-list hidden" id="hotel-autocomplete"></div>
+            </div>
+            <input type="hidden" id="hotel-select" value="">
+            <div style="margin-top: 12px;">
+                <label for="radio-input">Radio de busqueda (km):</label>
+                <input type="number" id="radio-input" value="10" min="1" max="100" step="1">
+            </div>
+            <button class="btn-primary" onclick="buscarLugares()">Buscar lugares cercanos</button>
+        </div>
+
+        <!-- Paso 2: Seleccion de lugares -->
+        <div class="card hidden" id="step2">
+            <h2><span class="step-number">2</span> Elige los lugares a visitar</h2>
+            <p style="color: #8892b0; margin-bottom: 12px;">Elige como quieres buscar los lugares:</p>
+            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <button class="btn-primary" id="btn-modo-radio" onclick="setModo('radio')">Por radio (KD-Tree)</button>
+                <button class="btn-secondary" id="btn-modo-buscar" onclick="setModo('buscar')">Buscar por nombre (Trie)</button>
+            </div>
+
+            <!-- Modo radio -->
+            <div id="modo-radio">
+                <p style="color: #8892b0; margin-bottom: 12px;">Lugares dentro del radio de tu hotel. Haz clic para seleccionar:</p>
+                <div class="lugares-grid" id="lugares-grid"></div>
+            </div>
+
+            <!-- Modo buscar por nombre -->
+            <div id="modo-buscar" class="hidden">
+                <div class="autocomplete-wrapper" style="margin-bottom: 12px;">
+                    <label for="lugar-search">Busca un lugar (autocompletado con Trie):</label>
+                    <input type="text" id="lugar-search" placeholder="Escribe el nombre del lugar..." autocomplete="off">
+                    <div class="autocomplete-list hidden" id="lugar-autocomplete"></div>
+                </div>
+                <div id="lugares-elegidos"></div>
+            </div>
+
+            <!-- Seleccionados y boton calcular -->
+            <div id="seleccion-resumen" style="margin-top: 12px; padding: 10px; background: rgba(245,166,35,0.1); border-radius: 8px;" class="hidden">
+                <strong style="color: #f5a623;">Seleccionados:</strong> <span id="seleccion-lista"></span>
+            </div>
+            <div style="margin-top: 16px; display: flex; gap: 12px;">
+                <button class="btn-secondary" onclick="seleccionarTodos()">Seleccionar todos</button>
+                <button class="btn-secondary" onclick="deseleccionarTodos()">Limpiar seleccion</button>
+                <button class="btn-primary" onclick="calcularRuta()">Calcular ruta optima</button>
+            </div>
+        </div>
+
+        <!-- Paso 3: Resultado -->
+        <div class="card hidden" id="step3">
+            <h2><span class="step-number">3</span> Tu ruta optimizada</h2>
+            <div id="resultado-contenido"></div>
+        </div>
+    </div>
+
+    <script>
+        let hotelesData = [];
+        let lugaresDisponibles = [];
+        let seleccionados = new Set();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/hoteles')
+                .then(r => r.json())
+                .then(data => { hotelesData = data; });
+        });
+
+        // Autocompletado
+        const searchInput = document.getElementById('hotel-search');
+        const acList = document.getElementById('hotel-autocomplete');
+        let acTimeout;
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(acTimeout);
+            document.getElementById('hotel-select').value = '';
+            searchInput.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            const q = searchInput.value.trim();
+            if (q.length < 1) { acList.classList.add('hidden'); return; }
+            acTimeout = setTimeout(() => {
+                fetch('/api/autocompletar?q=' + encodeURIComponent(q))
+                    .then(r => r.json())
+                    .then(items => {
+                        // Filtrar solo hoteles
+                        const hotelNames = hotelesData.map(h => h.nombre);
+                        const hotelItems = items.filter(name => hotelNames.includes(name));
+                        if (hotelItems.length === 0) { acList.classList.add('hidden'); return; }
+                        acList.innerHTML = '';
+                        hotelItems.forEach(name => {
+                            const div = document.createElement('div');
+                            div.textContent = name;
+                            div.onclick = () => {
+                                searchInput.value = name;
+                                acList.classList.add('hidden');
+                                const hotel = hotelesData.find(h => h.nombre === name);
+                                if (hotel) {
+                                    document.getElementById('hotel-select').value = hotel.id;
+                                    searchInput.style.borderColor = '#66bb6a';
+                                }
+                            };
+                            acList.appendChild(div);
+                        });
+                        acList.classList.remove('hidden');
+                    });
+            }, 150);
+        });
+
+        searchInput.addEventListener('blur', () => {
+            setTimeout(() => acList.classList.add('hidden'), 200);
+        });
+
+        let todosLugares = [];
+        let modoActual = 'radio';
+
+        function buscarLugares() {
+            const hotelId = parseInt(document.getElementById('hotel-select').value);
+            const radio = parseFloat(document.getElementById('radio-input').value);
+            if (!hotelId) { alert('Escribe y selecciona un hotel del autocompletado'); return; }
+
+            document.getElementById('step2').classList.remove('hidden');
+            setModo('radio');
+
+            const grid = document.getElementById('lugares-grid');
+            grid.innerHTML = '<div class="loading">Buscando lugares cercanos</div>';
+
+            fetch('/api/lugares_cercanos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hotel_id: hotelId, radio: radio })
+            })
+            .then(r => r.json())
+            .then(data => {
+                lugaresDisponibles = data;
+                seleccionados.clear();
+                renderLugares();
+                actualizarResumen();
+            });
+
+            // Cargar todos los lugares para el modo buscar
+            fetch('/api/lugares')
+            .then(r => r.json())
+            .then(data => { todosLugares = data; });
+        }
+
+        function setModo(modo) {
+            modoActual = modo;
+            const modoRadio = document.getElementById('modo-radio');
+            const modoBuscar = document.getElementById('modo-buscar');
+            const btnRadio = document.getElementById('btn-modo-radio');
+            const btnBuscar = document.getElementById('btn-modo-buscar');
+            if (modo === 'radio') {
+                modoRadio.classList.remove('hidden');
+                modoBuscar.classList.add('hidden');
+                btnRadio.className = 'btn-primary';
+                btnBuscar.className = 'btn-secondary';
+            } else {
+                modoRadio.classList.add('hidden');
+                modoBuscar.classList.remove('hidden');
+                btnRadio.className = 'btn-secondary';
+                btnBuscar.className = 'btn-primary';
+                renderElegidos();
+            }
+        }
+
+        // Autocompletado de lugares con Trie
+        const lugarSearch = document.getElementById('lugar-search');
+        const lugarAcList = document.getElementById('lugar-autocomplete');
+        let lugarAcTimeout;
+
+        lugarSearch.addEventListener('input', () => {
+            clearTimeout(lugarAcTimeout);
+            const q = lugarSearch.value.trim();
+            if (q.length < 1) { lugarAcList.classList.add('hidden'); return; }
+            lugarAcTimeout = setTimeout(() => {
+                fetch('/api/autocompletar?q=' + encodeURIComponent(q))
+                    .then(r => r.json())
+                    .then(items => {
+                        // Filtrar solo lugares (no hoteles)
+                        const lugarNames = todosLugares.map(l => l.nombre);
+                        const lugarItems = items.filter(name => lugarNames.includes(name));
+                        if (lugarItems.length === 0) { lugarAcList.classList.add('hidden'); return; }
+                        lugarAcList.innerHTML = '';
+                        lugarItems.forEach(name => {
+                            const div = document.createElement('div');
+                            div.textContent = name;
+                            div.onclick = () => {
+                                const lugar = todosLugares.find(l => l.nombre === name);
+                                if (lugar) {
+                                    seleccionados.add(lugar.id);
+                                    actualizarResumen();
+                                    renderElegidos();
+                                }
+                                lugarSearch.value = '';
+                                lugarAcList.classList.add('hidden');
+                            };
+                            lugarAcList.appendChild(div);
+                        });
+                        lugarAcList.classList.remove('hidden');
+                    });
+            }, 150);
+        });
+
+        lugarSearch.addEventListener('blur', () => {
+            setTimeout(() => lugarAcList.classList.add('hidden'), 200);
+        });
+
+        function renderElegidos() {
+            const container = document.getElementById('lugares-elegidos');
+            container.innerHTML = '';
+            seleccionados.forEach(id => {
+                const lugar = todosLugares.find(l => l.id === id);
+                if (!lugar) return;
+                const div = document.createElement('div');
+                div.className = 'lugar-item selected';
+                div.innerHTML = `
+                    <div class="nombre">${lugar.nombre} <span style="float:right;cursor:pointer;color:#e94560;" onclick="quitarLugar(${lugar.id})">✕</span></div>
+                    <div class="info">
+                        <span class="tag ${getTagClass(lugar.tipo)}">${lugar.tipo}</span>
+                        <span class="rating"> ${lugar.rating} ★</span>
+                    </div>
+                    <div class="info">${lugar.tiempo_visita} min visita</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function quitarLugar(id) {
+            seleccionados.delete(id);
+            actualizarResumen();
+            renderElegidos();
+            if (modoActual === 'radio') renderLugares();
+        }
+
+        function actualizarResumen() {
+            const resumen = document.getElementById('seleccion-resumen');
+            const lista = document.getElementById('seleccion-lista');
+            if (seleccionados.size === 0) {
+                resumen.classList.add('hidden');
+                return;
+            }
+            resumen.classList.remove('hidden');
+            const nombres = [];
+            seleccionados.forEach(id => {
+                const l = todosLugares.find(x => x.id === id) || lugaresDisponibles.find(x => x.id === id);
+                if (l) nombres.push(l.nombre);
+            });
+            lista.textContent = nombres.join(', ');
+        }
+
+        function getTagClass(tipo) {
+            const map = { 'historico': 'tag-historico', 'histórico': 'tag-historico', 'cultural': 'tag-cultural', 'parque': 'tag-parque', 'gastronomía': 'tag-gastronomia', 'gastronomia': 'tag-gastronomia' };
+            return map[tipo] || 'tag-historico';
+        }
+
+        function renderLugares() {
+            const grid = document.getElementById('lugares-grid');
+            grid.innerHTML = '';
+            lugaresDisponibles.forEach(l => {
+                const div = document.createElement('div');
+                div.className = 'lugar-item' + (seleccionados.has(l.id) ? ' selected' : '');
+                div.innerHTML = `
+                    <div class="nombre">${l.nombre}</div>
+                    <div class="info">
+                        <span class="tag ${getTagClass(l.tipo)}">${l.tipo}</span>
+                        <span class="rating"> ${l.rating} ★</span>
+                    </div>
+                    <div class="info">${l.tiempo_visita} min visita${l.horario ? ' | Cierra: ' + l.horario.cierra : ''}</div>
+                `;
+                div.onclick = () => {
+                    if (seleccionados.has(l.id)) seleccionados.delete(l.id);
+                    else seleccionados.add(l.id);
+                    renderLugares();
+                    actualizarResumen();
+                };
+                grid.appendChild(div);
+            });
+        }
+
+        function seleccionarTodos() {
+            lugaresDisponibles.forEach(l => seleccionados.add(l.id));
+            renderLugares();
+            actualizarResumen();
+        }
+
+        function deseleccionarTodos() {
+            seleccionados.clear();
+            renderLugares();
+            renderElegidos();
+            actualizarResumen();
+        }
+
+        function calcularRuta() {
+            if (seleccionados.size < 2) { alert('Selecciona al menos 2 lugares'); return; }
+            const hotelId = parseInt(document.getElementById('hotel-select').value);
+
+            const contenido = document.getElementById('resultado-contenido');
+            contenido.innerHTML = '<div class="loading">Calculando ruta optima</div>';
+            document.getElementById('step3').classList.remove('hidden');
+            document.getElementById('step3').scrollIntoView({ behavior: 'smooth' });
+
+            fetch('/api/calcular_ruta', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hotel_id: hotelId, lugares_ids: Array.from(seleccionados) })
+            })
+            .then(r => r.json())
+            .then(data => {
+                let html = '';
+
+                // Resumen
+                const totalGeneral = data.tiempo_hotel_inicio_min + data.total_traslado_min + data.total_visita_min;
+                const hrsTotal = Math.floor(totalGeneral / 60);
+                const minsTotal = totalGeneral % 60;
+                html += '<div class="resumen-box">';
+                html += `<div class="resumen-item"><div class="valor">${data.orden_visita.length}</div><div class="etiqueta">Lugares</div></div>`;
+                html += `<div class="resumen-item"><div class="valor">${data.tiempo_hotel_inicio_min} min</div><div class="etiqueta">Hotel → Inicio (${data.distancia_hotel_primer_lugar_km} km)</div></div>`;
+                html += `<div class="resumen-item"><div class="valor">${data.total_traslado_min} min</div><div class="etiqueta">Traslados entre lugares</div></div>`;
+                html += `<div class="resumen-item"><div class="valor">${data.total_visita_min} min</div><div class="etiqueta">Tiempo en visitas</div></div>`;
+                html += `<div class="resumen-item"><div class="valor">${hrsTotal}h ${minsTotal}m</div><div class="etiqueta">Tiempo total del día</div></div>`;
+                html += '</div>';
+
+                // Hora de salida
+                if (data.horario.hora_limite) {
+                    html += `<div class="alerta"><h3>Hora máxima de salida: ${data.horario.hora_limite}</h3>`;
+                    html += `<p>Restricción por <strong>${data.horario.lugar_limitante}</strong> (cierra a las ${data.horario.cierra_limitante})</p></div>`;
+                } else {
+                    html += `<div class="alerta"><h3>${data.horario.mensaje}</h3></div>`;
+                }
+
+                // No visitables
+                if (data.horario.no_visitables && data.horario.no_visitables.length > 0) {
+                    html += '<div class="alerta alerta-roja"><h3>Lugares que quiza no puedas visitar</h3>';
+                    html += '<p>Según los tiempos estimados, probablemente no alcances a entrar a:</p>';
+                    html += '<ul style="margin-top: 10px; padding-left: 24px; list-style: disc;">';
+                    data.horario.no_visitables.forEach(l => {
+                        html += `<li style="padding: 4px 0;">${l.nombre}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+
+                // Orden de visita
+                html += '<h3 style="margin-top: 20px; color: #ccd6f6;">Orden de visita recomendado:</h3>';
+                html += '<ol class="orden-lista">';
+                data.orden_visita.forEach(l => {
+                    html += `<li><strong>${l.nombre}</strong> <span class="tag ${getTagClass(l.tipo)}">${l.tipo}</span> <span class="rating"> ${l.rating} ★</span><br><span style="font-size:0.85em;color:#8892b0;">${l.tiempo_visita} min de visita</span></li>`;
+                });
+                html += '</ol>';
+
+                // Ruta detallada
+                html += '<h3 style="margin-top: 20px; color: #ccd6f6;">Ruta detallada:</h3>';
+                html += '<div class="resultado-ruta">';
+                data.ruta_detalle.forEach(r => {
+                    html += `<div class="ruta-step">
+                        <span>${r.origen}</span>
+                        <span class="ruta-arrow">→</span>
+                        <span>${r.destino}</span>
+                        <span class="ruta-tiempo">${r.tiempo_min} min</span>
+                    </div>`;
+                    if (r.ruta_intermedia.length > 2) {
+                        html += `<div class="ruta-intermedia">Pasando por: ${r.ruta_intermedia.join(' → ')}</div>`;
+                    }
+                });
+                html += '</div>';
+
+                contenido.innerHTML = html;
+            });
+        }
+    </script>
+</body>
+</html>

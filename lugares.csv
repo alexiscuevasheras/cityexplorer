@@ -1,0 +1,11 @@
+id,nombre,tipo,latitud,longitud,rating,tiempo_visita_min
+1,Zócalo,histórico,19.4326,-99.1332,4.7,60
+2,Bellas Artes,cultural,19.4353,-99.1412,4.8,90
+3,Chapultepec,parque,19.4204,-99.1927,4.6,180
+4,Xochimilco,histórico,19.2570,-99.1030,4.5,120
+5,Coyoacán,cultural,19.3500,-99.1622,4.7,90
+6,Teotihuacán,histórico,19.6925,-98.8438,4.9,240
+7,Museo Antropología,cultural,19.4260,-99.1860,4.9,120
+8,Mercado Jamaica,gastronomía,19.4035,-99.1218,4.3,45
+9,Roma Norte,gastronomía,19.4148,-99.1608,4.5,60
+10,Tlatelolco,histórico,19.4524,-99.1411,4.4,75

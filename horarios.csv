@@ -1,0 +1,6 @@
+id_lugar,abre,cierra,dias_cerrado
+2,10:00,17:30,Lunes
+3,05:00,18:00,Lunes
+4,09:00,18:00,Ninguno
+6,09:00,17:00,Ninguno
+7,09:00,19:00,Lunes
